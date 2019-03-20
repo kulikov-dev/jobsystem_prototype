@@ -6,7 +6,7 @@
         /// <summary> Currently processing jobs </summary>
         private readonly List<Task> jobsInWork;
         /// <summary> Maximum count of simultaneous jobs in work </summary>
-        private int jobsInWorkCount;
+        private readonly int jobsInWorkCount;
 
         /// <summary> Locker for jobs in work </summary>
         private readonly object jobsLocker = new object();
@@ -27,19 +27,16 @@
         public JobSystem(int jobsInWorkCount, IEnumerable<Task> jobs)
             : this(jobsInWorkCount)
         {
-            foreach (var job in jobs)
-            {
-                jobsQueue.Enqueue(job);
-            }
+            AddJobs(jobs);
         }
 
         /// <summary> Add new jobs for processing </summary>
         /// <param name="jobs"> Created jobs for processing </param>
-        public void AddJob(IEnumerable<Task> jobs)
+        public void AddJobs(IEnumerable<Task> jobs)
         {
-            foreach (var task in jobs)
+            foreach (var job in jobs)
             {
-                AddJob(task);
+                AddJob(job);
             }
         }
         /// <summary> Add new job for processing </summary>
@@ -49,9 +46,13 @@
             lock (jobsLocker)
             {
                 if (jobsInWork.Count >= jobsInWorkCount)
+                {
                     jobsQueue.Enqueue(job);
+                }
                 else
+                {
                     DoWork(job);
+                }
             }
         }
 
